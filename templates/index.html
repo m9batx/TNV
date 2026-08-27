@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}TechPulse{% endblock %}
+{% block content %}
+<header class="hero">
+  <h1>{{ langs[lang]['hero_title'] | safe }}</h1>
+  {# subtitle line removed: it dumped the whole langs[lang] dict #}
+</header>
+
+<div class="article-list">
+  {% for a in articles %}
+  <a class="card" href="{{ url_for('article', aid=a['id']) }}">
+    <div class="card-body">
+      <span class="badge">{{ a['source'] }}</span>
+      <h2>{{ a['rewritten_title'] or a['title'] }}</h2>
+      <p>{{ (a['rewritten_text'] or '')[:160] }}…</p>
+      <time>{{ (a['published_at'] or a['created_at'])[:10] }}</time>
+    </div>
+  </a>
+  {% else %}
+  <p class="empty">{{ langs[lang]['empty'] }}</p>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ a['rewritten_title'] }} — TechPulse{% endblock %}
+{% block content %}
+<article class="single">
+  <span class="badge">{{ a['source'] }}</span>
+  <h1>{{ a['rewritten_title'] }}</h1>
+  <time>{{ (a['published_at'] or a['created_at'])[:10] }}</time>
+  <div class="body">
+    {% for p in paragraphs %}<p>{{ p }}</p>{% endfor %}
+  </div>
+  <hr>
+  <p class="src">Original story: <a href="{{ a['url'] }}" rel="noopener" target="_blank">{{ a['title'] }}</a></p>
+  <a href="{{ url_for('index') }}">← Back home</a>
+</article>
+{% endblock %}

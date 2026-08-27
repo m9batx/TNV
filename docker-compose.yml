@@ -1,0 +1,54 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: techpulse-ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  # one-shot: downloads the model into the ollama volume before the app starts
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["sh", "-c", "ollama pull ${OLLAMA_MODEL:-qwen2.5:3b-instruct} && echo 'model ready'"]
+    restart: "no"
+
+  app:
+    build: .
+    container_name: techpulse-app
+    depends_on:
+      ollama:
+        condition: service_healthy
+      ollama-pull:
+        condition: service_completed_successfully
+    ports:
+      - "5000:5000"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "5000"
+      AI_PROVIDER: "ollama"
+      OLLAMA_BASE_URL: "http://ollama:11434"
+      OLLAMA_MODEL: "qwen2.5:3b-instruct"
+      REWRITE_STYLE: "casual"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin123}"
+      FLASK_SECRET: "${FLASK_SECRET:-please-change-this-secret}"
+      COLLECT_INTERVAL_MINUTES: "120"
+      REWRITE_INTERVAL_MINUTES: "30"
+    volumes:
+      - app_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  app_data:

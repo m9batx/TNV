@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Admin — Approval Dashboard{% endblock %}
+{% block content %}
+<h1>Approval Dashboard</h1>
+
+<div class="stat-row">
+  {% for s, c in stats.items() %}<span class="stat">{{ s }}: <b>{{ c }}</b></span>{% endfor %}
+</div>
+
+<div class="actions">
+  <form method="post" action="{{ url_for('collect') }}">
+    <input type="hidden" name="lang" value="{{ current_lang }}">
+    <button type="submit" class="btn btn-blue">⟳ Collect {% if current_lang == 'ru' %}RU{% elif current_lang == 'en' %}EN{% else %}All{% endif %}</button>
+  </form>
+  <form method="post" action="{{ url_for('rewrite') }}">
+    <input type="hidden" name="lang" value="{{ current_lang }}">
+    <button type="submit" class="btn btn-blue">✎ Rewrite {% if current_lang == 'ru' %}RU{% elif current_lang == 'en' %}EN{% else %}Queue{% endif %}</button>
+  </form>
+  <a class="btn" href="{{ url_for('logout') }}">Logout</a>
+</div>
+
+<div class="tabs">
+  <a class="tab {{ 'active' if current_lang == 'all' }}" href="{{ url_for('admin', status=current_status, lang='all') }}">all langs</a>
+  <a class="tab {{ 'active' if current_lang == 'en' }}" href="{{ url_for('admin', status=current_status, lang='en') }}">EN</a>
+  <a class="tab {{ 'active' if current_lang == 'ru' }}" href="{{ url_for('admin', status=current_status, lang='ru') }}">RU</a>
+  <span style="flex:1"></span>
+  {% for s in statuses %}
+  <a class="tab {{ 'active' if s == current_status }}" href="{{ url_for('admin', status=s, lang=current_lang) }}">{{ s.replace('_', ' ') }}</a>
+  {% endfor %}
+</div>
+
+{% if current_status == 'collected' %}
+<div class="actions" style="margin-top:14px">
+  <form method="post" action="{{ url_for('rewrite') }}">
+    <input type="hidden" name="lang" value="{{ current_lang }}">
+    <button type="submit" class="btn btn-blue">▶ Send all collected to Model {% if current_lang == 'ru' %}RU{% elif current_lang == 'en' %}EN{% else %}(all){% endif %}</button>
+  </form>
+  <span class="muted" style="align-self:center">Per-article: ▶ Send to Model runs the AI, ✎ Edit lets you rewrite manually.</span>
+</div>
+{% endif %}
+
+<table class="tbl">
+  <tr><th>Date</th><th>Title</th><th>Source</th><th>Lang</th><th>By</th><th>Actions</th></tr>
+  {% for a in articles %}
+  <tr>
+    <td class="muted" style="white-space:nowrap">{{ (a['published_at'] or a['created_at'])[:16].replace('T', ' ') }}</td>
+    <td>
+      <span class="muted">#{{ a['id'] }}</span> <b>{{ a['rewritten_title'] or a['title'] }}</b>
+      <details><summary>preview</summary><div class="prev">{{ (a['rewritten_text'] or a['original_text'] or '')[:600] }}…<br><br>orig: {{ a['url'] }}</div></details>
+    </td>
+    <td>{{ a['source'] }}</td>
+    <td>{{ (a['lang'] or 'en') | upper }}</td>
+    <td>{{ a['provider'] or '—' }}</td>
+    <td class="btn-cell">
+      {% if a['status'] == 'pending_approval' %}
+      <form method="post" action="{{ url_for('approve', aid=a['id']) }}"><button class="btn btn-green">Approve</button></form>
+      <form method="post" action="{{ url_for('reject', aid=a['id']) }}"><button class="btn btn-red">Reject</button></form>
+      <a class="btn" href="{{ url_for('edit_article', aid=a['id']) }}">Edit</a>
+      <form method="post" action="{{ url_for('rerewrite', aid=a['id']) }}"><button class="btn">↻ Rewrite</button></form>
+      {% elif a['status'] == 'published' %}
+      <a class="btn" href="{{ url_for('edit_article', aid=a['id']) }}">Edit</a>
+      <form method="post" action="{{ url_for('repending', aid=a['id']) }}"><button class="btn btn-gray">Unpublish</button></form>
+      {% elif a['status'] == 'rejected' %}
+      <a class="btn" href="{{ url_for('edit_article', aid=a['id']) }}">Edit</a>
+      <form method="post" action="{{ url_for('rerewrite', aid=a['id']) }}"><button class="btn">↻ Rewrite</button></form>
+      <form method="post" action="{{ url_for('repending', aid=a['id']) }}"><button class="btn btn-gray">Restore</button></form>
+      {% elif a['status'] == 'processing' %}
+      <div style="min-width:170px">
+        <span class="badge" style="border-color:var(--blue);color:var(--blue)">⏳ in model's hands… {{ a['progress'] or 0 }}%</span>
+        <div class="pbar"><div class="pfill" style="width:{{ a['progress'] or 0 }}%"></div></div>
+      </div>
+      {% else %}
+      <form method="post" action="{{ url_for('rerewrite', aid=a['id']) }}"><button class="btn btn-blue">▶ Send to Model</button></form>
+      <a class="btn" href="{{ url_for('edit_article', aid=a['id']) }}">✎ Edit</a>
+      {% endif %}
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="empty">No articles with this status.</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

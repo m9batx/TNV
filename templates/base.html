@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}TechPulse{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <nav class="nav">
+    <a href="{{ url_for('index') }}" class="site-name">TechPulse</a>
+    <div class="nav-links">
+      <a href="{{ url_for('index') }}" class="{{ 'active-lang' if not request.path.startswith('/ru') }}">EN</a>
+      <a href="{{ url_for('index_ru') }}" class="{{ 'active-lang' if request.path.startswith('/ru') }}">RU</a>
+      {% if session.get('is_admin') %}
+        <a href="{{ url_for('admin') }}">Admin</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% endif %}
+    </div>
+  </nav>
+  <main class="container">
+    {% with messages = get_flashed_messages() %}
+      {% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

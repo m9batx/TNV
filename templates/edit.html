@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Edit #{{ a['id'] }} — Admin{% endblock %}
+{% block content %}
+<h1>Edit Article #{{ a['id'] }}</h1>
+<p class="muted">Source: {{ a['source'] }} · {{ (a['lang'] or 'en') | upper }} · status: {{ a['status'] }}</p>
+<p class="muted">Original: <a href="{{ a['url'] }}" target="_blank" rel="noopener">{{ a['title'] }}</a></p>
+
+<form method="post" class="edit-form">
+  <label for="title">Title</label>
+  <input type="text" id="title" name="title" value="{{ a['rewritten_title'] or '' }}" required>
+
+  <label for="body">Body</label>
+  <textarea id="body" name="body" rows="18" required>{{ a['rewritten_text'] or '' }}</textarea>
+
+  <div class="actions" style="margin-top:14px">
+    <button type="submit" name="action" value="save" class="btn btn-blue">Save</button>
+    {% if a['status'] in ('pending_approval', 'rejected') %}
+    <button type="submit" name="action" value="publish" class="btn btn-green">Save &amp; Publish</button>
+    {% endif %}
+    {% if a['status'] == 'pending_approval' %}
+    <button type="submit" formaction="{{ url_for('reject', aid=a['id']) }}" class="btn btn-red">Reject</button>
+    {% endif %}
+    <a href="{{ url_for('admin') }}" class="btn btn-gray">Back</a>
+  </div>
+</form>
+{% endblock %}
