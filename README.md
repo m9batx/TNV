@@ -2,7 +2,7 @@
 
 Collects tech news from 5 sites → AI rewrites them in a casual style (DeepSeek / Qwen) → you approve via CLI or dashboard → approved articles go live on the local website.
 
-Designed for **2-core Windows + 16 GB RAM**: SQLite, Flask single-process, sequential scraping, cloud AI (zero GPU load). Optional fully-offline mode with Ollama.
+Designed for **2-core Windows**: SQLite, Flask single-process, sequential scraping, cloud AI (zero GPU load). Optional fully-offline mode with Ollama.
 
 ## Architecture
 
